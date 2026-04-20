@@ -24,7 +24,6 @@
     {"id":"s020","doctorId":"1","date":"2026-04-28","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 1"},
     {"id":"s021","doctorId":"1","date":"2026-04-29","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 1"},
     {"id":"s022","doctorId":"1","date":"2026-04-30","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 1"},
-
     {"id":"s101","doctorId":"2","date":"2026-04-01","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 1"},
     {"id":"s102","doctorId":"2","date":"2026-04-02","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 1"},
     {"id":"s103","doctorId":"2","date":"2026-04-03","startTime":"08:00","endTime":"17:00","type":"public_holiday","unit":"Unit 1","notes":"Good Friday"},
@@ -43,7 +42,6 @@
     {"id":"s116","doctorId":"2","date":"2026-04-22","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 1"},
     {"id":"s117","doctorId":"2","date":"2026-04-23","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 1"},
     {"id":"s118","doctorId":"2","date":"2026-04-24","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 1"},
-
     {"id":"s201","doctorId":"3","date":"2026-04-01","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 2"},
     {"id":"s202","doctorId":"3","date":"2026-04-02","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 2"},
     {"id":"s203","doctorId":"3","date":"2026-04-06","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 2"},
@@ -58,7 +56,6 @@
     {"id":"s212","doctorId":"3","date":"2026-04-15","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 2"},
     {"id":"s213","doctorId":"3","date":"2026-04-16","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 2"},
     {"id":"s214","doctorId":"3","date":"2026-04-17","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 2"},
-
     {"id":"s301","doctorId":"9","date":"2026-04-01","startTime":"14:00","endTime":"22:00","type":"evening","unit":"Evening"},
     {"id":"s302","doctorId":"9","date":"2026-04-02","startTime":"14:00","endTime":"22:00","type":"evening","unit":"Evening"},
     {"id":"s303","doctorId":"9","date":"2026-04-06","startTime":"14:00","endTime":"22:00","type":"evening","unit":"Evening"},
@@ -71,7 +68,6 @@
     {"id":"s310","doctorId":"9","date":"2026-04-15","startTime":"14:00","endTime":"22:00","type":"evening","unit":"Evening"},
     {"id":"s311","doctorId":"9","date":"2026-04-16","startTime":"14:00","endTime":"22:00","type":"evening","unit":"Evening"},
     {"id":"s312","doctorId":"9","date":"2026-04-17","startTime":"14:00","endTime":"22:00","type":"evening","unit":"Evening"},
-
     {"id":"s401","doctorId":"10","date":"2026-04-01","startTime":"08:00","endTime":"16:00","type":"day","unit":"Unit 5"},
     {"id":"s402","doctorId":"10","date":"2026-04-02","startTime":"08:00","endTime":"16:00","type":"day","unit":"Unit 5"},
     {"id":"s403","doctorId":"10","date":"2026-04-06","startTime":"08:00","endTime":"16:00","type":"day","unit":"Unit 5"},
@@ -79,7 +75,6 @@
     {"id":"s405","doctorId":"10","date":"2026-04-08","startTime":"08:00","endTime":"16:00","type":"day","unit":"Unit 5"},
     {"id":"s406","doctorId":"10","date":"2026-04-09","startTime":"08:00","endTime":"12:00","type":"short","unit":"Unit 5"},
     {"id":"s407","doctorId":"10","date":"2026-04-10","startTime":"08:00","endTime":"16:00","type":"day","unit":"Unit 5"},
-
     {"id":"s501","doctorId":"12","date":"2026-04-01","startTime":"08:00","endTime":"16:00","type":"day","unit":"Unit 6"},
     {"id":"s502","doctorId":"12","date":"2026-04-02","startTime":"08:00","endTime":"16:00","type":"day","unit":"Unit 6"},
     {"id":"s503","doctorId":"12","date":"2026-04-06","startTime":"08:00","endTime":"16:00","type":"day","unit":"Unit 6"},
@@ -87,7 +82,6 @@
     {"id":"s505","doctorId":"12","date":"2026-04-08","startTime":"08:00","endTime":"16:00","type":"day","unit":"Unit 6"},
     {"id":"s506","doctorId":"12","date":"2026-04-09","startTime":"08:00","endTime":"16:00","type":"day","unit":"Unit 6"},
     {"id":"s507","doctorId":"12","date":"2026-04-10","startTime":"08:00","endTime":"16:00","type":"day","unit":"Unit 6"},
-
     {"id":"s601","doctorId":"14","date":"2026-04-01","startTime":"08:00","endTime":"16:00","type":"day","unit":"Oncology/HAEM"},
     {"id":"s602","doctorId":"14","date":"2026-04-02","startTime":"08:00","endTime":"16:00","type":"day","unit":"Oncology/HAEM"},
     {"id":"s603","doctorId":"14","date":"2026-04-06","startTime":"08:00","endTime":"16:00","type":"day","unit":"Oncology/HAEM"},
@@ -95,7 +89,6 @@
     {"id":"s605","doctorId":"14","date":"2026-04-08","startTime":"08:00","endTime":"16:00","type":"day","unit":"Oncology/HAEM"},
     {"id":"s606","doctorId":"14","date":"2026-04-09","startTime":"08:00","endTime":"16:00","type":"day","unit":"Oncology/HAEM"},
     {"id":"s607","doctorId":"14","date":"2026-04-10","startTime":"08:00","endTime":"16:00","type":"day","unit":"Oncology/HAEM"},
-
     {"id":"s701","doctorId":"13","date":"2026-04-01","startTime":"08:00","endTime":"16:00","type":"day","unit":"Unit 6"},
     {"id":"s702","doctorId":"13","date":"2026-04-02","startTime":"08:00","endTime":"16:00","type":"day","unit":"Unit 6"},
     {"id":"s703","doctorId":"13","date":"2026-04-06","startTime":"00:00","endTime":"00:00","type":"off","unit":"Unit 6"},
