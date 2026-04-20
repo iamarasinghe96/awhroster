@@ -12,7 +12,6 @@ body {
   background: rgb(var(--background-rgb));
 }
 
-/* Custom scrollbar for calendar grid */
 .roster-scroll::-webkit-scrollbar {
   height: 6px;
   width: 6px;
@@ -28,7 +27,6 @@ body {
   background: #94a3b8;
 }
 
-/* Drag overlay */
 .drag-overlay {
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   cursor: grabbing !important;

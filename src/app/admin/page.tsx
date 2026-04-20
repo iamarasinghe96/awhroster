@@ -48,7 +48,6 @@ export default function AdminPage() {
     });
   }, [monthKey]);
 
-  // ── Save to localStorage ───────────────────────────────────────────────────
   const persistShifts = useCallback(
     (shifts: Shift[]) => {
       const updated: MonthlySchedule = {
@@ -59,7 +58,6 @@ export default function AdminPage() {
       saveScheduleLocal(updated);
       setSchedule(updated);
       setSaveStatus("saving");
-      // Visual feedback
       setTimeout(() => setSaveStatus("saved"), 300);
       setTimeout(() => setSaveStatus("idle"), 2500);
     },
@@ -71,7 +69,6 @@ export default function AdminPage() {
     [persistShifts]
   );
 
-  // ── Doctor management (localStorage) ──────────────────────────────────────
   const handleAddDoctor = (data: Omit<Doctor, "id">) => {
     const newDoc: Doctor = { ...data, id: uuidv4() };
     const updated = [...doctors, newDoc];
@@ -99,7 +96,6 @@ export default function AdminPage() {
     }
   };
 
-  // ── Exports ────────────────────────────────────────────────────────────────
   const handleExportScheduleJSON = () => {
     if (!schedule) return;
     exportScheduleJSON(schedule);
@@ -131,7 +127,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Top header */}
       <header className="bg-slate-800 text-white px-4 py-3 flex items-center justify-between flex-wrap gap-3 z-40 sticky top-0">
         <div className="flex items-center gap-4">
           <div>
@@ -150,7 +145,6 @@ export default function AdminPage() {
           </Link>
         </div>
 
-        {/* Month navigation */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
@@ -182,7 +176,6 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* Right actions */}
         <div className="flex items-center gap-2 flex-wrap">
           <span
             className={`text-xs px-2 py-1 rounded-full transition ${
@@ -219,7 +212,6 @@ export default function AdminPage() {
         </div>
       </header>
 
-      {/* Deploy help panel */}
       {showDeployHelp && (
         <div className="bg-blue-950 border-b border-blue-800 px-5 py-4 text-sm text-blue-100">
           <div className="flex items-start justify-between gap-4 max-w-4xl">
@@ -269,7 +261,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Holiday key */}
       {showHolidayKey && (
         <div className="bg-green-50 border-b border-green-200 px-4 py-3">
           <h3 className="text-xs font-bold text-green-800 mb-2">
@@ -316,7 +307,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
         <DoctorPanel
           doctors={doctors}
@@ -351,7 +341,6 @@ export default function AdminPage() {
         </main>
       </div>
 
-      {/* Legend */}
       <footer className="bg-white border-t border-slate-200 px-4 py-2 flex flex-wrap gap-3 items-center text-xs text-slate-500 z-10">
         <span className="font-semibold text-slate-700">Shifts:</span>
         {[
