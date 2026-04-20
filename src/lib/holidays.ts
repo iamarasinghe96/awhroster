@@ -1,7 +1,6 @@
 import type { Holiday } from "./types";
 
-export const NSW_PUBLIC_HOLIDAYS: Holiday[] = [
-  // 2026
+const HARDCODED: Holiday[] = [
   { date: "2026-01-01", name: "New Year's Day" },
   { date: "2026-01-26", name: "Australia Day" },
   { date: "2026-04-03", name: "Good Friday" },
@@ -16,7 +15,6 @@ export const NSW_PUBLIC_HOLIDAYS: Holiday[] = [
   { date: "2026-12-25", name: "Christmas Day" },
   { date: "2026-12-26", name: "Boxing Day" },
   { date: "2026-12-28", name: "Boxing Day (Additional Day)" },
-  // 2027
   { date: "2027-01-01", name: "New Year's Day" },
   { date: "2027-01-26", name: "Australia Day" },
   { date: "2027-03-26", name: "Good Friday" },
@@ -33,6 +31,13 @@ export const NSW_PUBLIC_HOLIDAYS: Holiday[] = [
   { date: "2027-12-27", name: "Christmas Day (Additional Day)" },
   { date: "2027-12-28", name: "Boxing Day (Additional Day)" },
 ];
+
+// Module-level mutable list — updated at runtime from public/data/holidays.json
+export let NSW_PUBLIC_HOLIDAYS: Holiday[] = [...HARDCODED];
+
+export function updateHolidays(list: Holiday[]): void {
+  if (list.length > 0) NSW_PUBLIC_HOLIDAYS = list;
+}
 
 export function getHoliday(dateStr: string): Holiday | undefined {
   return NSW_PUBLIC_HOLIDAYS.find((h) => h.date === dateStr);

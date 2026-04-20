@@ -8,13 +8,13 @@
  * locally-stored copy, so doctors always see the latest deployed schedule.
  */
 
-import type { Doctor, MonthlySchedule } from "./types";
+import type { Doctor, Holiday, MonthlySchedule } from "./types";
 
 const BASE = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/$/, "");
 const DOCTORS_KEY = "awhroaster-doctors";
 const scheduleKey = (m: string) => `awhroaster-schedule-${m}`;
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────────────────
 
 async function fetchJSON<T>(path: string): Promise<T | null> {
   try {
@@ -42,7 +42,7 @@ function localRemove(key: string): void {
   localStorage.removeItem(key);
 }
 
-// ── Doctors ───────────────────────────────────────────────────────────────────
+// ── Doctors ─────────────────────────────────────────────────────────────────────────────
 
 export async function loadDoctors(): Promise<Doctor[]> {
   // 1. Try static source of truth first
@@ -59,7 +59,7 @@ export function saveDoctorsLocal(doctors: Doctor[]): void {
   localSet(DOCTORS_KEY, doctors);
 }
 
-// ── Schedules ─────────────────────────────────────────────────────────────────
+// ── Schedules ───────────────────────────────────────────────────────────────────────────
 
 export async function loadSchedule(month: string): Promise<MonthlySchedule> {
   const empty: MonthlySchedule = { month, lastModified: "", shifts: [] };
@@ -116,7 +116,36 @@ export function exportDoctorsJSON(doctors: Doctor[]): void {
   URL.revokeObjectURL(url);
 }
 
-// ── Generic file download (CSV / iCal) ────────────────────────────────────────
+// ── Holidays ───────────────────────────────────────────────────────────────────────────
+
+export async function loadHolidays(): Promise<Holiday[]> {
+  const remote = await fetchJSON<{ holidays: Holiday[] }>("/data/holidays.json");
+  if (remote?.holidays) {
+    localSet("awhroaster-holidays", remote.holidays);
+    return remote.holidays;
+  }
+  return localGet<Holiday[]>("awhroaster-holidays") ?? [];
+}
+
+export function saveHolidaysLocal(holidays: Holiday[]): void {
+  localSet("awhroaster-holidays", holidays);
+}
+
+export function exportHolidaysJSON(holidays: Holiday[]): void {
+  const blob = new Blob([JSON.stringify({ holidays }, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "holidays.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── Generic file download (CSV / iCal) ──────────────────────────────────────────────
 
 export function downloadFile(
   content: string,
