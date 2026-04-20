@@ -16,8 +16,8 @@ import {
 import type { Doctor, Shift, MonthlySchedule } from "@/lib/types";
 import { SHIFT_COLORS } from "@/lib/types";
 import { calculateHours, getDoctorTotalHours, getWeeklyAverageHours } from "@/lib/scheduleUtils";
-import { getHoliday } from "@/lib/holidays";
-import { loadDoctors, loadSchedule, downloadFile } from "@/lib/clientStorage";
+import { getHoliday, updateHolidays } from "@/lib/holidays";
+import { loadDoctors, loadSchedule, loadHolidays, downloadFile } from "@/lib/clientStorage";
 import { generateICalContent, generateDoctorCSV } from "@/lib/scheduleUtils";
 import HolidayBadge from "@/components/common/HolidayBadge";
 
@@ -120,6 +120,7 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
 
   useEffect(() => {
     loadDoctors().then(setAllDoctors);
+    loadHolidays().then((h) => { if (h.length) updateHolidays(h); });
   }, []);
 
   const getAllShifts = (): Shift[] => [
