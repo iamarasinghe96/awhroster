@@ -1,4 +1,4 @@
-import { format, parseISO, eachDayOfInterval, startOfMonth, endOfMonth, getDay } from "date-fns";
+import { format, parseISO, eachDayOfInterval, startOfMonth, endOfMonth } from "date-fns";
 import type { Shift, Doctor, ShiftType } from "./types";
 import { v4 as uuidv4 } from "uuid";
 
@@ -18,7 +18,7 @@ export function shiftLabel(type: ShiftType, startTime: string, endTime: string):
   if (type === "off") return "OFF";
   if (type === "request_off") return "Request OFF";
   if (type === "public_holiday") return "PH";
-  return `${startTime.replace(":", ":")}–${endTime.replace(":", ":")}`;
+  return `${startTime.replace(":", ":")}\u2013${endTime.replace(":", ":")}`;
 }
 
 export function getDoctorTotalHours(shifts: Shift[], doctorId: string): number {
@@ -87,7 +87,7 @@ export function generateICalContent(shifts: Shift[], doctor: Doctor): string {
     const summary =
       shift.type === "public_holiday"
         ? `Public Holiday - ${shift.unit}`
-        : `${shift.type === "day" ? "Day" : shift.type === "evening" ? "Evening" : shift.type === "oncall" ? "On-Call" : "Short"} Shift – ${shift.unit}`;
+        : `${shift.type === "day" ? "Day" : shift.type === "evening" ? "Evening" : shift.type === "oncall" ? "On-Call" : "Short"} Shift \u2013 ${shift.unit}`;
 
     lines.push(
       "BEGIN:VEVENT",
