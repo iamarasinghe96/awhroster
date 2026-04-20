@@ -13,23 +13,22 @@ interface Props {
   onClose: () => void;
 }
 
-function buildPrompt(doctors: Doctor[], monthKey: string): string {
-  const monthLabel = format(parseISO(monthKey + "-01"), "MMMM yyyy");
+function buildPrompt(doctors: Doctor[]): string {
   const doctorList = doctors
     .map((d) => `  - ID: "${d.id}" | Name: "${d.name}" | Role: ${d.role} | Default Unit: "${d.unit}"`)
     .join("\n");
 
-  return `You are extracting a medical ward roster from a PDF for ${monthLabel}.
+  return `You are extracting a medical ward roster from a PDF.
 
 Known doctors in this system:
 ${doctorList}
 
-Extract every shift for ${monthLabel} (${monthKey}) from the PDF.
+Extract ALL shifts visible in the entire PDF -- every page, every date.
 
 RULES:
 - Match each person in the PDF to a Doctor ID by name (partial/fuzzy match is fine)
 - Skip anyone not in the doctor list above
-- "date" must be "YYYY-MM-DD" format
+- "date" must be "YYYY-MM-DD" format -- read the actual dates from the PDF
 - "startTime" and "endTime" must be "HH:mm" 24-hour format (e.g. 0800-1700 becomes "08:00" and "17:00")
 - For "type" use exactly one of:
     "day"            standard day shift (e.g. 0800-1700, 0800-1600)
@@ -45,7 +44,7 @@ RULES:
 
 Return ONLY a valid JSON array -- no markdown, no explanation, no code blocks:
 [
-  {"id":"g001","doctorId":"<ID>","date":"${monthKey}-01","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 1"},
+  {"id":"g001","doctorId":"<ID>","date":"2026-03-23","startTime":"08:00","endTime":"17:00","type":"day","unit":"Unit 1"},
   ...
 ]`;
 }
@@ -66,7 +65,7 @@ export default function GeminiImportModal({
   const [extracted, setExtracted] = useState<Shift[]>([]);
   const [mode, setMode] = useState<"replace" | "merge">("replace");
 
-  const prompt = buildPrompt(doctors, monthKey);
+  const prompt = buildPrompt(doctors);
   const monthLabel = format(parseISO(monthKey + "-01"), "MMMM yyyy");
 
   const handleCopy = async () => {
@@ -87,10 +86,10 @@ export default function GeminiImportModal({
 
       const validIds = new Set(doctors.map((d) => d.id));
       const valid = parsed.filter(
-        (s) => validIds.has(s.doctorId) && typeof s.date === "string" && s.date.startsWith(monthKey)
+        (s) => validIds.has(s.doctorId) && typeof s.date === "string"
       );
 
-      if (valid.length === 0) throw new Error("No valid shifts found for this month and doctor list");
+      if (valid.length === 0) throw new Error("No valid shifts found -- check that doctor names match");
 
       setExtracted(valid);
       setStep("preview");
