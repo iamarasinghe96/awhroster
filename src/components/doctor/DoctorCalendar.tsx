@@ -60,7 +60,7 @@ function ShiftCell({
   return (
     <div className={`mt-1 rounded-md px-2 py-1 border text-xs ${colors.bg} ${colors.text} ${colors.border} ${opacity}`}>
       <div className="font-semibold">
-        {shift.startTime}\u2013{shift.endTime}
+        {shift.startTime}–{shift.endTime}
       </div>
       {hours && <div>{hours}h</div>}
       <div className="truncate text-[10px] opacity-80">{shift.unit}</div>
@@ -77,7 +77,7 @@ function ShiftCell({
                 style={{ backgroundColor: d.color }}
               />
               <span className="truncate font-medium">{d.name.split(" ").slice(0, 2).join(" ")}</span>
-              <span className="opacity-60 flex-shrink-0">({s.startTime}\u2013{s.endTime})</span>
+              <span className="opacity-60 flex-shrink-0">({s.startTime}–{s.endTime})</span>
             </div>
           ))}
           {coworkers.length > 4 && (
@@ -143,6 +143,7 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
       .filter((s) => {
         if (s.date !== dateStr || s.doctorId === doctor.id) return false;
         if (["off", "request_off", "public_holiday"].includes(s.type)) return false;
+        if (s.unit !== myShift.unit) return false;
         const start = toMins(s.startTime);
         const end = toMins(s.endTime);
         return start < myEnd && end > myStart;
@@ -196,7 +197,7 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
               onClick={onBack}
               className="text-slate-500 hover:text-slate-800 text-sm flex items-center gap-1"
             >
-              \u2190 Back
+              ← Back
             </button>
             <div
               className="w-4 h-4 rounded-full flex-shrink-0"
@@ -205,7 +206,7 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
             <div>
               <h1 className="text-lg font-bold text-slate-800">{doctor.name}</h1>
               <p className="text-sm text-slate-500">
-                {doctor.role} \u2013 {doctor.unit}
+                {doctor.role} – {doctor.unit}
               </p>
             </div>
           </div>
@@ -226,13 +227,13 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
               onClick={handleExportICal}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition"
             >
-              \ud83d\udcc5 Add to Calendar
+              📅 Add to Calendar
             </button>
             <button
               onClick={handleExportCSV}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition"
             >
-              \u2b07 Download CSV
+              ⬇ Download CSV
             </button>
           </div>
         </div>
@@ -244,7 +245,7 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
             onClick={() => setCurrentDate(subMonths(currentDate, 1))}
             className="px-3 py-1.5 rounded-lg border border-slate-300 text-sm hover:bg-slate-100 transition"
           >
-            \u2190 {format(subMonths(currentDate, 1), "MMM")}
+            ← {format(subMonths(currentDate, 1), "MMM")}
           </button>
           <h2 className="text-xl font-bold text-slate-800">
             {format(currentDate, "MMMM yyyy")}
@@ -253,13 +254,13 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
             onClick={() => setCurrentDate(addMonths(currentDate, 1))}
             className="px-3 py-1.5 rounded-lg border border-slate-300 text-sm hover:bg-slate-100 transition"
           >
-            {format(addMonths(currentDate, 1), "MMM")} \u2192
+            {format(addMonths(currentDate, 1), "MMM")} →
           </button>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center h-64 text-slate-500">
-            Loading schedule\u2026
+            Loading schedule…
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -331,10 +332,10 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
         <div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-600">
           <span className="font-medium">Shift types:</span>
           {[
-            { label: "Day 08:00\u201317:00", color: "bg-blue-100 text-blue-800" },
-            { label: "Evening 14:00\u201322:00", color: "bg-purple-100 text-purple-800" },
-            { label: "On-Call 12:00\u201322:00", color: "bg-violet-100 text-violet-800" },
-            { label: "Short 08:00\u201312:00", color: "bg-amber-100 text-amber-800" },
+            { label: "Day 08:00–17:00", color: "bg-blue-100 text-blue-800" },
+            { label: "Evening 14:00–22:00", color: "bg-purple-100 text-purple-800" },
+            { label: "On-Call 12:00–22:00", color: "bg-violet-100 text-violet-800" },
+            { label: "Short 08:00–12:00", color: "bg-amber-100 text-amber-800" },
             { label: "Public Holiday", color: "bg-green-100 text-green-800" },
           ].map(({ label, color }) => (
             <span key={label} className={`px-2 py-0.5 rounded-full ${color}`}>
@@ -345,7 +346,7 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
         </div>
 
         <p className="mt-3 text-xs text-slate-400">
-          Teaching: HMO Teaching \u2013 Mondays 14:00\u201319:00 &nbsp;|&nbsp; Intern Teaching \u2013 Thursdays 12:00\u201313:00
+          Teaching: HMO Teaching – Mondays 14:00–19:00 &nbsp;|&nbsp; Intern Teaching – Thursdays 12:00–13:00
         </p>
       </main>
     </div>
