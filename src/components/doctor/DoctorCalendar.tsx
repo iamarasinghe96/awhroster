@@ -10,14 +10,16 @@ import {
   endOfWeek,
   isSameMonth,
   isSameDay,
-  parseISO,
   addMonths,
   subMonths,
 } from "date-fns";
+import Link from "next/link";
 import type { Doctor, Shift, MonthlySchedule } from "@/lib/types";
 import { SHIFT_COLORS } from "@/lib/types";
 import { calculateHours, getDoctorTotalHours, getWeeklyAverageHours } from "@/lib/scheduleUtils";
-import { getHoliday, isHoliday } from "@/lib/holidays";
+import { getHoliday } from "@/lib/holidays";
+import { loadDoctors, loadSchedule, downloadFile } from "@/lib/clientStorage";
+import { generateICalContent, generateDoctorCSV } from "@/lib/scheduleUtils";
 import HolidayBadge from "@/components/common/HolidayBadge";
 
 interface Props {
@@ -36,22 +38,17 @@ function ShiftCell({
   isCurrentMonth: boolean;
   otherDoctors?: { doctor: Doctor; shift: Shift }[];
 }) {
-  if (!shift) {
-    return <div className="h-full min-h-[72px]" />;
-  }
+  if (!shift) return <div className="h-full min-h-[72px]" />;
 
   const colors = SHIFT_COLORS[shift.type];
   const hours =
     ["off", "request_off", "public_holiday"].includes(shift.type)
       ? null
       : calculateHours(shift.startTime, shift.endTime);
-
   const opacity = isCurrentMonth ? "" : "opacity-40";
 
   if (shift.type === "off") {
-    return (
-      <div className={`text-xs text-gray-400 italic mt-1 ${opacity}`}>OFF</div>
-    );
+    return <div className={`text-xs text-gray-400 italic mt-1 ${opacity}`}>OFF</div>;
   }
   if (shift.type === "request_off") {
     return (
@@ -62,16 +59,13 @@ function ShiftCell({
   }
 
   return (
-    <div
-      className={`mt-1 rounded-md px-2 py-1 border text-xs ${colors.bg} ${colors.text} ${colors.border} ${opacity}`}
-    >
+    <div className={`mt-1 rounded-md px-2 py-1 border text-xs ${colors.bg} ${colors.text} ${colors.border} ${opacity}`}>
       <div className="font-semibold">
         {shift.startTime}–{shift.endTime}
       </div>
       {hours && <div>{hours}h</div>}
       <div className="truncate text-[10px] opacity-80">{shift.unit}</div>
       {shift.notes && <div className="truncate text-[10px] italic">{shift.notes}</div>}
-      {/* Adjacent-period colleagues */}
       {otherDoctors && otherDoctors.length > 0 && (
         <div className="mt-1 pt-1 border-t border-current border-opacity-20">
           {otherDoctors.slice(0, 2).map(({ doctor, shift: s }) => (
@@ -102,16 +96,14 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
   const prevMonthKey = format(subMonths(currentDate, 1), "yyyy-MM");
   const nextMonthKey = format(addMonths(currentDate, 1), "yyyy-MM");
 
-  const fetchMonth = useCallback(async (key: string) => {
-    if (schedules[key]) return;
-    try {
-      const res = await fetch(`/api/schedule/${key}`);
-      const data: MonthlySchedule = await res.json();
+  const fetchMonth = useCallback(
+    async (key: string) => {
+      if (schedules[key]) return;
+      const data = await loadSchedule(key);
       setSchedules((prev) => ({ ...prev, [key]: data }));
-    } catch {
-      setSchedules((prev) => ({ ...prev, [key]: { month: key, lastModified: "", shifts: [] } }));
-    }
-  }, [schedules]);
+    },
+    [schedules]
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -120,70 +112,72 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
       fetchMonth(monthKey),
       fetchMonth(nextMonthKey),
     ]).finally(() => setLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [monthKey]);
 
   useEffect(() => {
-    fetch("/api/doctors")
-      .then((r) => r.json())
-      .then((d) => setAllDoctors(d.doctors ?? []));
+    loadDoctors().then(setAllDoctors);
   }, []);
 
-  const getAllShifts = (): Shift[] => {
-    return [
-      ...(schedules[prevMonthKey]?.shifts ?? []),
-      ...(schedules[monthKey]?.shifts ?? []),
-      ...(schedules[nextMonthKey]?.shifts ?? []),
-    ];
-  };
+  const getAllShifts = (): Shift[] => [
+    ...(schedules[prevMonthKey]?.shifts ?? []),
+    ...(schedules[monthKey]?.shifts ?? []),
+    ...(schedules[nextMonthKey]?.shifts ?? []),
+  ];
 
-  const getShiftForDay = (date: Date, doctorId: string): Shift | undefined => {
-    const dateStr = format(date, "yyyy-MM-dd");
-    return getAllShifts().find((s) => s.doctorId === doctorId && s.date === dateStr);
-  };
+  const getShiftForDay = (dateStr: string, doctorId: string): Shift | undefined =>
+    getAllShifts().find((s) => s.doctorId === doctorId && s.date === dateStr);
 
-  const getOtherDoctorShifts = (date: Date): { doctor: Doctor; shift: Shift }[] => {
-    const dateStr = format(date, "yyyy-MM-dd");
-    return getAllShifts()
+  const getOtherDoctorShifts = (dateStr: string): { doctor: Doctor; shift: Shift }[] =>
+    getAllShifts()
       .filter(
         (s) =>
           s.date === dateStr &&
           s.doctorId !== doctor.id &&
           !["off", "request_off"].includes(s.type)
       )
-      .map((s) => ({
-        doctor: allDoctors.find((d) => d.id === s.doctorId)!,
-        shift: s,
-      }))
+      .map((s) => ({ doctor: allDoctors.find((d) => d.id === s.doctorId)!, shift: s }))
       .filter((x) => x.doctor);
-  };
 
-  // Build calendar grid (weeks × 7)
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
-  const calStart = startOfWeek(monthStart);
-  const calEnd = endOfWeek(monthEnd);
-  const calDays = eachDayOfInterval({ start: calStart, end: calEnd });
+  const calDays = eachDayOfInterval({
+    start: startOfWeek(monthStart),
+    end: endOfWeek(monthEnd),
+  });
 
-  // Stats
   const currentShifts = (schedules[monthKey]?.shifts ?? []).filter(
     (s) => s.doctorId === doctor.id
   );
   const totalHours = getDoctorTotalHours(currentShifts, doctor.id);
-  const avgWeekly = getWeeklyAverageHours(schedules[monthKey]?.shifts ?? [], doctor.id, monthKey);
+  const avgWeekly = getWeeklyAverageHours(
+    schedules[monthKey]?.shifts ?? [],
+    doctor.id,
+    monthKey
+  );
 
   const handleExportICal = () => {
-    const months = [prevMonthKey, monthKey, nextMonthKey].join("&month=");
-    window.location.href = `/api/export/ical?doctorId=${doctor.id}&month=${months}`;
+    const allShifts = getAllShifts().filter((s) => s.doctorId === doctor.id);
+    const content = generateICalContent(allShifts, doctor);
+    downloadFile(
+      content,
+      `${doctor.name.replace(/\s+/g, "_")}_roster.ics`,
+      "text/calendar; charset=utf-8"
+    );
   };
 
   const handleExportCSV = () => {
-    window.location.href = `/api/export/csv?doctorId=${doctor.id}&month=${monthKey}`;
+    const monthShifts = currentShifts;
+    const content = generateDoctorCSV(monthShifts, doctor);
+    downloadFile(
+      content,
+      `${doctor.name.replace(/\s+/g, "_")}_${monthKey}.csv`,
+      "text/csv; charset=utf-8"
+    );
   };
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
       <header className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -205,7 +199,6 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
             </div>
           </div>
 
-          {/* Stats */}
           <div className="flex gap-4 text-sm">
             <div className="text-center">
               <div className="font-bold text-blue-700">{totalHours}h</div>
@@ -217,7 +210,6 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={handleExportICal}
@@ -236,7 +228,6 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* Month navigation */}
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => setCurrentDate(subMonths(currentDate, 1))}
@@ -256,10 +247,11 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-64 text-slate-500">Loading schedule…</div>
+          <div className="flex items-center justify-center h-64 text-slate-500">
+            Loading schedule…
+          </div>
         ) : (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            {/* Day headers */}
             <div className="grid grid-cols-7 border-b border-slate-200">
               {DAY_LABELS.map((d) => (
                 <div
@@ -271,15 +263,14 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
               ))}
             </div>
 
-            {/* Calendar grid */}
             <div className="grid grid-cols-7">
               {calDays.map((day, i) => {
                 const dateStr = format(day, "yyyy-MM-dd");
                 const inCurrentMonth = isSameMonth(day, currentDate);
                 const isToday = isSameDay(day, new Date());
                 const holiday = getHoliday(dateStr);
-                const myShift = getShiftForDay(day, doctor.id);
-                const others = !inCurrentMonth ? getOtherDoctorShifts(day) : [];
+                const myShift = getShiftForDay(dateStr, doctor.id);
+                const others = !inCurrentMonth ? getOtherDoctorShifts(dateStr) : [];
 
                 return (
                   <div
@@ -290,7 +281,6 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
                       holiday ? "bg-green-50/40" : ""
                     }`}
                   >
-                    {/* Day number */}
                     <div className="flex items-start justify-between mb-0.5">
                       <span
                         className={`text-xs font-medium leading-none rounded-full w-5 h-5 flex items-center justify-center ${
@@ -306,14 +296,12 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
                       {holiday && <HolidayBadge holiday={holiday} compact />}
                     </div>
 
-                    {/* Holiday label */}
                     {holiday && (
                       <div className="text-[9px] text-green-700 font-medium leading-tight mb-0.5 truncate">
                         {holiday.name}
                       </div>
                     )}
 
-                    {/* Shift */}
                     <ShiftCell
                       shift={myShift}
                       isCurrentMonth={inCurrentMonth}
@@ -326,7 +314,6 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
           </div>
         )}
 
-        {/* Legend */}
         <div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-600">
           <span className="font-medium">Shift types:</span>
           {[

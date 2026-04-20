@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import type { Doctor } from "@/lib/types";
+import { loadDoctors } from "@/lib/clientStorage";
 import DoctorCalendar from "@/components/doctor/DoctorCalendar";
 
 export default function DoctorPage() {
@@ -11,41 +13,46 @@ export default function DoctorPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch("/api/doctors")
-      .then((r) => r.json())
-      .then((d) => { setDoctors(d.doctors ?? []); setLoading(false); });
+    loadDoctors().then((docs) => {
+      setDoctors(docs);
+      setLoading(false);
+    });
   }, []);
 
   if (selected) {
     return <DoctorCalendar doctor={selected} onBack={() => setSelected(null)} />;
   }
 
-  const filtered = doctors.filter((d) =>
-    d.name.toLowerCase().includes(search.toLowerCase()) ||
-    d.unit.toLowerCase().includes(search.toLowerCase()) ||
-    d.role.toLowerCase().includes(search.toLowerCase())
+  const filtered = doctors.filter(
+    (d) =>
+      d.name.toLowerCase().includes(search.toLowerCase()) ||
+      d.unit.toLowerCase().includes(search.toLowerCase()) ||
+      d.role.toLowerCase().includes(search.toLowerCase())
   );
 
   const internDoctors = filtered.filter((d) => d.role === "Intern");
   const hmoDoctors = filtered.filter((d) => d.role === "HMO");
-  const otherDoctors = filtered.filter((d) => !["Intern", "HMO"].includes(d.role));
+  const otherDoctors = filtered.filter(
+    (d) => !["Intern", "HMO"].includes(d.role)
+  );
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
       <header className="bg-gradient-to-r from-blue-700 to-blue-900 text-white">
         <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">AWH Roaster</h1>
-              <p className="text-blue-200 text-sm mt-0.5">Albury Base Hospital – Medicine</p>
+              <p className="text-blue-200 text-sm mt-0.5">
+                Albury Base Hospital – Medicine
+              </p>
             </div>
-            <a
+            <Link
               href="/admin"
               className="text-blue-200 hover:text-white text-sm border border-blue-400 hover:border-blue-200 rounded-lg px-3 py-1.5 transition"
             >
               Admin →
-            </a>
+            </Link>
           </div>
           <p className="mt-4 text-blue-100 text-sm">
             Select your name to view and export your roster
@@ -54,7 +61,6 @@ export default function DoctorPage() {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-8">
-        {/* Search */}
         <div className="relative mb-6">
           <input
             type="text"
@@ -63,11 +69,15 @@ export default function DoctorPage() {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
           />
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+            🔍
+          </span>
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-slate-500">Loading doctors…</div>
+          <div className="text-center py-20 text-slate-500">
+            Loading doctors…
+          </div>
         ) : (
           <div className="space-y-6">
             {[
@@ -107,7 +117,9 @@ export default function DoctorPage() {
                                 {doc.role} – {doc.unit}
                               </div>
                               {doc.position && (
-                                <div className="text-xs text-slate-400 truncate">{doc.position}</div>
+                                <div className="text-xs text-slate-400 truncate">
+                                  {doc.position}
+                                </div>
                               )}
                             </div>
                           </div>
