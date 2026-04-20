@@ -49,7 +49,6 @@ export default function ShiftModal({ shift, doctor, onSave, onDelete, onClose }:
         </div>
 
         <div className="p-6 space-y-4">
-          {/* Shift type presets */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
               Shift Type
@@ -71,7 +70,6 @@ export default function ShiftModal({ shift, doctor, onSave, onDelete, onClose }:
             </div>
           </div>
 
-          {/* Time range */}
           {!["off", "request_off"].includes(form.type) && (
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
@@ -102,7 +100,6 @@ export default function ShiftModal({ shift, doctor, onSave, onDelete, onClose }:
                 </div>
               </div>
 
-              {/* Visual time bar */}
               {hours > 0 && (
                 <div className="mt-2 bg-slate-100 rounded-full h-2 overflow-hidden">
                   <div
@@ -117,7 +114,6 @@ export default function ShiftModal({ shift, doctor, onSave, onDelete, onClose }:
             </div>
           )}
 
-          {/* Unit */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
               Unit / Location
@@ -131,7 +127,6 @@ export default function ShiftModal({ shift, doctor, onSave, onDelete, onClose }:
             </select>
           </div>
 
-          {/* Notes */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
               Notes
