@@ -48,6 +48,7 @@ export default function AdminPage() {
     });
   }, [monthKey]);
 
+  // ── Save to localStorage ───────────────────────────────────────────────────
   const persistShifts = useCallback(
     (shifts: Shift[]) => {
       const updated: MonthlySchedule = {
@@ -58,6 +59,7 @@ export default function AdminPage() {
       saveScheduleLocal(updated);
       setSchedule(updated);
       setSaveStatus("saving");
+      // Visual feedback
       setTimeout(() => setSaveStatus("saved"), 300);
       setTimeout(() => setSaveStatus("idle"), 2500);
     },
@@ -69,6 +71,7 @@ export default function AdminPage() {
     [persistShifts]
   );
 
+  // ── Doctor management (localStorage) ──────────────────────────────────────
   const handleAddDoctor = (data: Omit<Doctor, "id">) => {
     const newDoc: Doctor = { ...data, id: uuidv4() };
     const updated = [...doctors, newDoc];
@@ -94,6 +97,21 @@ export default function AdminPage() {
     if (schedule) {
       handleShiftsChange(schedule.shifts.filter((s) => s.doctorId !== id));
     }
+  };
+
+  // ── Exports ────────────────────────────────────────────────────────────────
+  const GITHUB_SCHEDULES_UPLOAD = "https://github.com/iamarasinghe96/awhroster/upload/main/public/data/schedules";
+  const GITHUB_DOCTORS_UPLOAD = "https://github.com/iamarasinghe96/awhroster/upload/main/public/data";
+
+  const handlePublishSchedule = () => {
+    if (!schedule) return;
+    exportScheduleJSON(schedule);
+    setTimeout(() => window.open(GITHUB_SCHEDULES_UPLOAD, "_blank"), 400);
+  };
+
+  const handlePublishDoctors = () => {
+    exportDoctorsJSON(doctors);
+    setTimeout(() => window.open(GITHUB_DOCTORS_UPLOAD, "_blank"), 400);
   };
 
   const handleExportScheduleJSON = () => {
@@ -127,6 +145,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Top header */}
       <header className="bg-slate-800 text-white px-4 py-3 flex items-center justify-between flex-wrap gap-3 z-40 sticky top-0">
         <div className="flex items-center gap-4">
           <div>
@@ -145,6 +164,7 @@ export default function AdminPage() {
           </Link>
         </div>
 
+        {/* Month navigation */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
@@ -176,6 +196,7 @@ export default function AdminPage() {
           </button>
         </div>
 
+        {/* Right actions */}
         <div className="flex items-center gap-2 flex-wrap">
           <span
             className={`text-xs px-2 py-1 rounded-full transition ${
@@ -212,47 +233,35 @@ export default function AdminPage() {
         </div>
       </header>
 
+      {/* Deploy panel */}
       {showDeployHelp && (
         <div className="bg-blue-950 border-b border-blue-800 px-5 py-4 text-sm text-blue-100">
-          <div className="flex items-start justify-between gap-4 max-w-4xl">
-            <div>
-              <p className="font-bold text-white mb-1">
-                How to publish schedule changes to doctors:
-              </p>
+          <div className="flex items-start justify-between gap-6 max-w-4xl flex-wrap">
+            <div className="flex-1 min-w-[240px]">
+              <p className="font-bold text-white mb-1">Publish changes to doctors</p>
               <ol className="list-decimal list-inside space-y-1 text-blue-200 text-xs">
-                <li>
-                  Click <strong className="text-white">Export Schedule JSON</strong> → save the downloaded{" "}
-                  <code className="bg-blue-900 px-1 rounded">{monthKey}.json</code> file
-                </li>
-                <li>
-                  Place the file in{" "}
-                  <code className="bg-blue-900 px-1 rounded">
-                    public/data/schedules/{monthKey}.json
-                  </code>{" "}
-                  in the repository
-                </li>
-                <li>
-                  Commit &amp; push → GitHub Actions will rebuild and deploy automatically
-                </li>
-                <li>Doctors refresh the site to see the updated schedule</li>
+                <li>Click <strong className="text-white">Publish Schedule</strong> — it downloads <code className="bg-blue-900 px-1 rounded">{monthKey}.json</code> and opens GitHub</li>
+                <li>Drag &amp; drop the downloaded file onto the GitHub page and commit</li>
+                <li>GitHub Actions rebuilds automatically — doctors refresh to see changes</li>
               </ol>
             </div>
-            <div className="flex flex-col gap-1.5 flex-shrink-0">
+            <div className="flex flex-col gap-2 flex-shrink-0">
               <button
-                onClick={handleExportScheduleJSON}
-                className="text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-white whitespace-nowrap"
+                onClick={handlePublishSchedule}
+                disabled={!schedule}
+                className="flex items-center gap-1.5 text-xs px-3 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 rounded text-white whitespace-nowrap font-medium transition"
               >
-                Export Schedule JSON
+                ⬆ Publish Schedule ({monthKey})
               </button>
               <button
-                onClick={handleExportDoctorsJSON}
-                className="text-xs px-3 py-1.5 bg-slate-600 hover:bg-slate-500 rounded text-white whitespace-nowrap"
+                onClick={handlePublishDoctors}
+                className="flex items-center gap-1.5 text-xs px-3 py-2 bg-slate-600 hover:bg-slate-500 rounded text-white whitespace-nowrap transition"
               >
-                Export Doctors JSON
+                ⬆ Publish Doctors List
               </button>
               <button
                 onClick={handleResetFromPublished}
-                className="text-xs px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 whitespace-nowrap"
+                className="text-xs px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-400 hover:text-slate-200 whitespace-nowrap transition"
               >
                 Reset from Published
               </button>
@@ -261,6 +270,7 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* Holiday key */}
       {showHolidayKey && (
         <div className="bg-green-50 border-b border-green-200 px-4 py-3">
           <h3 className="text-xs font-bold text-green-800 mb-2">
@@ -307,6 +317,7 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
         <DoctorPanel
           doctors={doctors}
@@ -341,6 +352,7 @@ export default function AdminPage() {
         </main>
       </div>
 
+      {/* Legend */}
       <footer className="bg-white border-t border-slate-200 px-4 py-2 flex flex-wrap gap-3 items-center text-xs text-slate-500 z-10">
         <span className="font-semibold text-slate-700">Shifts:</span>
         {[
