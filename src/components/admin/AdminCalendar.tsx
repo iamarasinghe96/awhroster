@@ -6,10 +6,8 @@ import {
   eachDayOfInterval,
   startOfMonth,
   endOfMonth,
-  parseISO,
   getDay,
   isToday,
-  isSameMonth,
 } from "date-fns";
 import {
   DndContext,
@@ -26,9 +24,7 @@ import { SHIFT_COLORS } from "@/lib/types";
 import { calculateHours, createShift } from "@/lib/scheduleUtils";
 import { getHoliday, isHoliday } from "@/lib/holidays";
 import ShiftModal from "./ShiftModal";
-import HolidayBadge from "@/components/common/HolidayBadge";
 
-// ─── Droppable calendar cell ──────────────────────────────────────────────────
 function CalendarCell({
   cellId,
   doctor,
@@ -93,7 +89,6 @@ function CalendarCell({
   );
 }
 
-// ─── Doctor row label ─────────────────────────────────────────────────────────
 function DoctorRowLabel({
   doctor,
   totalHours,
@@ -128,7 +123,6 @@ function DoctorRowLabel({
   );
 }
 
-// ─── Teaching event row ───────────────────────────────────────────────────────
 function TeachingRow({ days }: { days: Date[] }) {
   return (
     <tr className="border-b border-slate-100">
@@ -160,13 +154,11 @@ function TeachingRow({ days }: { days: Date[] }) {
           </td>
         );
       })}
-      {/* Summary spacer */}
       <td className="border-r border-slate-100 bg-teal-50 min-w-[100px]" />
     </tr>
   );
 }
 
-// ─── Main Admin Calendar ──────────────────────────────────────────────────────
 interface Props {
   doctors: Doctor[];
   shifts: Shift[];
@@ -210,20 +202,17 @@ export default function AdminCalendar({
     const activeData = active.data.current;
     if (activeData?.type !== "doctor") return;
 
-    // Cell id format: "cell-{doctorId}-{date}"
     const overId = String(over.id);
     if (!overId.startsWith("cell-")) return;
 
     const parts = overId.split("-");
-    // "cell-{doctorId}-{yyyy-MM-dd}"
-    const dateStr = parts.slice(-3).join("-"); // "yyyy-MM-dd"
+    const dateStr = parts.slice(-3).join("-");
     const targetDoctorId = parts.slice(1, -3).join("-");
 
     const doctor: Doctor = activeData.doctor as Doctor;
 
-    // Don't overwrite an existing shift unless it's a same-doctor drop
     const existing = getShift(targetDoctorId, dateStr);
-    if (existing) return; // already has a shift; user must edit via click
+    if (existing) return;
 
     const holiday = isHoliday(dateStr);
     const type: ShiftType = holiday ? "public_holiday" : "day";
@@ -247,7 +236,6 @@ export default function AdminCalendar({
     onShiftsChange(shifts.filter((s) => s.id !== id));
   };
 
-  // Summary: total hours per doctor for this month
   const monthKey = format(currentMonth, "yyyy-MM");
   const doctorHours = doctors.reduce<Record<string, { total: number; count: number }>>((acc, d) => {
     const doctorShifts = shifts.filter(
@@ -266,7 +254,6 @@ export default function AdminCalendar({
         <div className="flex-1 overflow-auto roster-scroll">
           <table className="border-collapse min-w-max w-full">
             <thead className="sticky top-0 z-20">
-              {/* Month/week header row */}
               <tr className="bg-slate-800 text-white">
                 <th className="sticky left-0 z-30 bg-slate-800 text-left px-3 py-2 text-xs font-semibold w-44 min-w-[176px] border-r border-slate-600">
                   Doctor / Staff
@@ -305,15 +292,12 @@ export default function AdminCalendar({
             </thead>
 
             <tbody>
-              {/* Teaching row */}
               <TeachingRow days={days} />
 
-              {/* Doctor rows */}
               {doctors.map((doctor) => {
                 const stats = doctorHours[doctor.id] ?? { total: 0, count: 0 };
                 return (
                   <tr key={doctor.id} className="border-b border-slate-100 hover:bg-slate-50/30 transition">
-                    {/* Doctor label */}
                     <td className="sticky left-0 z-10 bg-white border-r border-slate-200 min-h-[68px]">
                       <DoctorRowLabel
                         doctor={doctor}
@@ -322,7 +306,6 @@ export default function AdminCalendar({
                       />
                     </td>
 
-                    {/* Day cells */}
                     {days.map((day) => {
                       const dateStr = format(day, "yyyy-MM-dd");
                       const dow = getDay(day);
@@ -346,7 +329,6 @@ export default function AdminCalendar({
                       );
                     })}
 
-                    {/* Hours summary */}
                     <td className="sticky right-0 z-10 bg-slate-50 border-l border-slate-200 px-3 text-center min-w-[100px]">
                       <div className={`text-sm font-bold ${stats.total > 160 ? "text-red-600" : stats.total >= 140 ? "text-emerald-600" : "text-slate-600"}`}>
                         {stats.total}h
@@ -360,7 +342,6 @@ export default function AdminCalendar({
                 );
               })}
 
-              {/* Daily total row */}
               <tr className="bg-slate-100 border-t-2 border-slate-300">
                 <td className="sticky left-0 z-10 bg-slate-100 border-r border-slate-300 px-3 py-1.5">
                   <span className="text-xs font-bold text-slate-600">Daily Coverage</span>
@@ -393,7 +374,6 @@ export default function AdminCalendar({
           </table>
         </div>
 
-        {/* Drag overlay */}
         <DragOverlay>
           {draggedDoctor && (
             <div className="drag-overlay bg-white rounded-xl border-2 border-blue-500 px-3 py-2 shadow-2xl w-48">
@@ -414,7 +394,6 @@ export default function AdminCalendar({
         </DragOverlay>
       </DndContext>
 
-      {/* Shift edit modal */}
       {editingShift && (
         <ShiftModal
           shift={editingShift.shift}

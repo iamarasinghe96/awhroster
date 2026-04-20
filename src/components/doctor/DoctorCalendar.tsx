@@ -13,7 +13,6 @@ import {
   addMonths,
   subMonths,
 } from "date-fns";
-import Link from "next/link";
 import type { Doctor, Shift, MonthlySchedule } from "@/lib/types";
 import { SHIFT_COLORS } from "@/lib/types";
 import { calculateHours, getDoctorTotalHours, getWeeklyAverageHours } from "@/lib/scheduleUtils";
@@ -167,8 +166,7 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
   };
 
   const handleExportCSV = () => {
-    const monthShifts = currentShifts;
-    const content = generateDoctorCSV(monthShifts, doctor);
+    const content = generateDoctorCSV(currentShifts, doctor);
     downloadFile(
       content,
       `${doctor.name.replace(/\s+/g, "_")}_${monthKey}.csv`,
