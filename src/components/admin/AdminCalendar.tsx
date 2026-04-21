@@ -245,6 +245,12 @@ export default function AdminCalendar({
     onShiftsChange(shifts.filter((s) => s.id !== id));
   };
 
+  const handleShiftDuplicate = (newShifts: Shift[]) => {
+    const existingKeys = new Set(shifts.map((s) => `${s.doctorId}|${s.date}`));
+    const toAdd = newShifts.filter((s) => !existingKeys.has(`${s.doctorId}|${s.date}`));
+    onShiftsChange([...shifts, ...toAdd]);
+  };
+
   // Summary: total hours per doctor for this month
   const monthKey = format(currentMonth, "yyyy-MM");
   const doctorHours = doctors.reduce<Record<string, { total: number; count: number }>>((acc, d) => {
@@ -419,6 +425,7 @@ export default function AdminCalendar({
           doctor={editingShift.doctor}
           onSave={handleShiftSave}
           onDelete={handleShiftDelete}
+          onDuplicate={handleShiftDuplicate}
           onClose={() => setEditingShift(null)}
         />
       )}
