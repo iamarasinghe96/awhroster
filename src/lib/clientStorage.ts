@@ -8,7 +8,7 @@
  * locally-stored copy, so doctors always see the latest deployed schedule.
  */
 
-import type { Doctor, Holiday, MonthlySchedule } from "./types";
+import type { CalendarEvent, Doctor, Holiday, MonthlySchedule } from "./types";
 
 const BASE = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/$/, "");
 const DOCTORS_KEY = "awhroaster-doctors";
@@ -128,6 +128,35 @@ export function exportHolidaysJSON(holidays: Holiday[]): void {
   const a = document.createElement("a");
   a.href = url;
   a.download = "holidays.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── Events ─────────────────────────────────────────────────────────────────────────────
+
+export async function loadEvents(): Promise<CalendarEvent[]> {
+  const remote = await fetchJSON<{ events: CalendarEvent[] }>("/data/events.json");
+  if (remote?.events) {
+    localSet("awhroaster-events", remote.events);
+    return remote.events;
+  }
+  return localGet<CalendarEvent[]>("awhroaster-events") ?? [];
+}
+
+export function saveEventsLocal(events: CalendarEvent[]): void {
+  localSet("awhroaster-events", events);
+}
+
+export function exportEventsJSON(events: CalendarEvent[]): void {
+  const blob = new Blob([JSON.stringify({ events }, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "events.json";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

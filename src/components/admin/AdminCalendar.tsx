@@ -21,7 +21,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { useDroppable } from "@dnd-kit/core";
-import type { Doctor, Shift, ShiftType } from "@/lib/types";
+import type { CalendarEvent, Doctor, Shift, ShiftType } from "@/lib/types";
 import { SHIFT_COLORS } from "@/lib/types";
 import { calculateHours, createShift } from "@/lib/scheduleUtils";
 import { getHoliday, isHoliday } from "@/lib/holidays";
@@ -128,39 +128,35 @@ function DoctorRowLabel({
   );
 }
 
-// ─── Teaching event row ───────────────────────────────────────────────────────
-function TeachingRow({ days }: { days: Date[] }) {
+// ─── Dynamic events row ───────────────────────────────────────────────────────
+function EventsRow({ days, events }: { days: Date[]; events: CalendarEvent[] }) {
+  if (events.length === 0) return null;
   return (
     <tr className="border-b border-slate-100">
       <td className="sticky left-0 z-10 bg-teal-50 border-r border-slate-200 px-2 py-1 w-44 min-w-[176px]">
-        <span className="text-[10px] font-semibold text-teal-700">Teaching Sessions</span>
+        <span className="text-[10px] font-semibold text-teal-700">Events</span>
       </td>
       {days.map((day) => {
         const dow = getDay(day);
         const dateStr = format(day, "yyyy-MM-dd");
-        const isMonday = dow === 1;
-        const isThursday = dow === 4;
+        const dayEvents = events.filter((e) =>
+          e.recurrence === "weekly" ? e.dayOfWeek === dow :
+          e.recurrence === "specific" ? (e.dates?.includes(dateStr) ?? false) : false
+        );
         return (
-          <td
-            key={dateStr}
-            className={`border-r border-b border-slate-100 text-[9px] p-1 min-w-[90px] ${
-              isMonday ? "bg-teal-50" : isThursday ? "bg-sky-50" : "bg-white"
-            }`}
-          >
-            {isMonday && (
-              <div className="bg-teal-100 text-teal-800 rounded px-1 py-0.5 font-medium">
-                HMO Teaching 14:00–19:00
+          <td key={dateStr}
+            className={`border-r border-b border-slate-100 text-[9px] p-1 min-w-[90px] ${dayEvents.length ? "bg-teal-50/40" : "bg-white"}`}>
+            {dayEvents.map((evt) => (
+              <div key={evt.id}
+                className="rounded px-1 py-0.5 font-medium mb-0.5 text-white truncate text-[9px]"
+                style={{ backgroundColor: evt.color }}
+                title={`${evt.title} ${evt.startTime}–${evt.endTime}${evt.notes ? ` · ${evt.notes}` : ""} (${evt.recipients})`}>
+                {evt.title} {evt.startTime}–{evt.endTime}
               </div>
-            )}
-            {isThursday && (
-              <div className="bg-sky-100 text-sky-800 rounded px-1 py-0.5 font-medium">
-                Intern Teaching 12:00–13:00
-              </div>
-            )}
+            ))}
           </td>
         );
       })}
-      {/* Summary spacer */}
       <td className="border-r border-slate-100 bg-teal-50 min-w-[100px]" />
     </tr>
   );
@@ -171,6 +167,7 @@ interface Props {
   doctors: Doctor[];
   shifts: Shift[];
   currentMonth: Date;
+  events: CalendarEvent[];
   onShiftsChange: (shifts: Shift[]) => void;
 }
 
@@ -178,6 +175,7 @@ export default function AdminCalendar({
   doctors,
   shifts,
   currentMonth,
+  events,
   onShiftsChange,
 }: Props) {
   const [editingShift, setEditingShift] = useState<{ shift: Shift; doctor: Doctor } | null>(null);
@@ -305,8 +303,8 @@ export default function AdminCalendar({
             </thead>
 
             <tbody>
-              {/* Teaching row */}
-              <TeachingRow days={days} />
+              {/* Events row */}
+              <EventsRow days={days} events={events} />
 
               {/* Doctor rows */}
               {doctors.map((doctor) => {

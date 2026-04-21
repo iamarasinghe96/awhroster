@@ -74,6 +74,19 @@ export const UNIT_OPTIONS = [
   "Other",
 ];
 
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  startTime: string;  // "HH:mm"
+  endTime: string;    // "HH:mm"
+  recurrence: "weekly" | "specific";
+  dayOfWeek?: number; // 0=Sun…6=Sat (for weekly)
+  dates?: string[];   // "YYYY-MM-DD" list (for specific)
+  recipients: "all" | "Intern" | "HMO" | "Registrar" | "Consultant";
+  color: string;      // hex
+  notes?: string;
+}
+
 // Teaching sessions (auto-applied based on role)
 // HMO Teaching: Every Monday 14:00-19:00
 // Intern Teaching: Every Thursday 12:00-13:00
