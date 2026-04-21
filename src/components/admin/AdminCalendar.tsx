@@ -6,10 +6,8 @@ import {
   eachDayOfInterval,
   startOfMonth,
   endOfMonth,
-  parseISO,
   getDay,
   isToday,
-  isSameMonth,
 } from "date-fns";
 import {
   DndContext,
@@ -20,13 +18,60 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { useDroppable } from "@dnd-kit/core";
+import { useDroppable, useDraggable } from "@dnd-kit/core";
+import { v4 as uuidv4 } from "uuid";
 import type { CalendarEvent, Doctor, Shift, ShiftType } from "@/lib/types";
 import { SHIFT_COLORS } from "@/lib/types";
 import { calculateHours, createShift } from "@/lib/scheduleUtils";
 import { getHoliday, isHoliday } from "@/lib/holidays";
 import ShiftModal from "./ShiftModal";
 import HolidayBadge from "@/components/common/HolidayBadge";
+
+// ─── Shift card (shared rendering) ───────────────────────────────────────────
+function ShiftCard({ shift, faded = false }: { shift: Shift; faded?: boolean }) {
+  const colors = SHIFT_COLORS[shift.type];
+  const hours = !["off", "request_off", "public_holiday"].includes(shift.type)
+    ? calculateHours(shift.startTime, shift.endTime)
+    : null;
+  return (
+    <div className={`rounded p-1 text-[10px] leading-tight h-full border ${colors.bg} ${colors.text} ${colors.border} ${faded ? "opacity-30" : ""}`}>
+      {shift.type === "off" ? (
+        <span className="text-gray-400 font-medium">OFF</span>
+      ) : shift.type === "request_off" ? (
+        <span className="font-medium text-orange-600">Req.OFF</span>
+      ) : shift.type === "public_holiday" ? (
+        <span className="font-medium">PH</span>
+      ) : (
+        <>
+          <div className="font-semibold">{shift.startTime}–{shift.endTime}</div>
+          <div className="font-bold text-sm">{hours}h</div>
+          <div className="opacity-75 truncate">{shift.unit}</div>
+        </>
+      )}
+      {shift.notes && <div className="opacity-60 truncate mt-0.5">{shift.notes}</div>}
+    </div>
+  );
+}
+
+// ─── Draggable shift inside a cell ────────────────────────────────────────────
+function DraggableShift({ shift, doctor, onClick }: { shift: Shift; doctor: Doctor; onClick?: () => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `shift-${shift.id}`,
+    data: { type: "shift", shift, doctor },
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      onClick={onClick}
+      className="h-full cursor-grab active:cursor-grabbing"
+      title="Drag to copy · Click to edit"
+    >
+      <ShiftCard shift={shift} faded={isDragging} />
+    </div>
+  );
+}
 
 // ─── Droppable calendar cell ──────────────────────────────────────────────────
 function CalendarCell({
@@ -36,6 +81,7 @@ function CalendarCell({
   date,
   isWeekend,
   holiday,
+  draggedShift,
   onClick,
 }: {
   cellId: string;
@@ -44,49 +90,30 @@ function CalendarCell({
   date: string;
   isWeekend: boolean;
   holiday?: ReturnType<typeof getHoliday>;
+  draggedShift?: Shift | null;
   onClick?: () => void;
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: cellId });
 
-  const colors = shift ? SHIFT_COLORS[shift.type] : null;
-  const hours = shift && !["off", "request_off", "public_holiday"].includes(shift.type)
-    ? calculateHours(shift.startTime, shift.endTime)
-    : null;
-
   return (
     <div
       ref={setNodeRef}
-      onClick={shift ? onClick : undefined}
       className={`
         border-r border-b border-slate-100 min-h-[68px] p-1 transition-all relative
         ${isWeekend ? "bg-slate-50/70" : "bg-white"}
         ${holiday ? "bg-green-50/50" : ""}
-        ${isOver ? "bg-blue-50 ring-2 ring-inset ring-blue-400" : ""}
-        ${shift ? "cursor-pointer" : ""}
+        ${isOver && !shift ? "bg-blue-50 ring-2 ring-inset ring-blue-400" : ""}
       `}
     >
       {shift ? (
-        <div className={`rounded p-1 text-[10px] leading-tight h-full border ${colors!.bg} ${colors!.text} ${colors!.border}`}>
-          {shift.type === "off" ? (
-            <span className="text-gray-400 font-medium">OFF</span>
-          ) : shift.type === "request_off" ? (
-            <span className="font-medium text-orange-600">Req.OFF</span>
-          ) : shift.type === "public_holiday" ? (
-            <span className="font-medium">PH</span>
-          ) : (
-            <>
-              <div className="font-semibold">
-                {shift.startTime}–{shift.endTime}
-              </div>
-              <div className="font-bold text-sm">{hours}h</div>
-              <div className="opacity-75 truncate">{shift.unit}</div>
-            </>
-          )}
-          {shift.notes && <div className="opacity-60 truncate mt-0.5">{shift.notes}</div>}
+        <DraggableShift shift={shift} doctor={doctor} onClick={onClick} />
+      ) : isOver && draggedShift ? (
+        <div className="opacity-60 pointer-events-none">
+          <ShiftCard shift={draggedShift} />
         </div>
       ) : (
-        <div className={`h-full flex items-center justify-center text-slate-200 text-[10px] ${isOver ? "text-blue-400" : ""}`}>
-          {isOver ? "Drop here" : ""}
+        <div className={`h-full flex items-center justify-center text-[10px] ${isOver ? "text-blue-400" : "text-slate-200"}`}>
+          {isOver ? "Copy here" : ""}
         </div>
       )}
     </div>
@@ -180,6 +207,7 @@ export default function AdminCalendar({
 }: Props) {
   const [editingShift, setEditingShift] = useState<{ shift: Shift; doctor: Doctor } | null>(null);
   const [draggedDoctor, setDraggedDoctor] = useState<Doctor | null>(null);
+  const [draggedShift, setDraggedShift] = useState<Shift | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -198,43 +226,47 @@ export default function AdminCalendar({
   const handleDragStart = (event: DragStartEvent) => {
     const data = event.active.data.current;
     if (data?.type === "doctor") setDraggedDoctor(data.doctor as Doctor);
+    if (data?.type === "shift") setDraggedShift(data.shift as Shift);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    const prevDraggedShift = draggedShift;
     setDraggedDoctor(null);
+    setDraggedShift(null);
+
     const { active, over } = event;
     if (!over) return;
 
     const activeData = active.data.current;
-    if (activeData?.type !== "doctor") return;
-
-    // Cell id format: "cell-{doctorId}-{date}"
     const overId = String(over.id);
     if (!overId.startsWith("cell-")) return;
 
     const parts = overId.split("-");
-    // "cell-{doctorId}-{yyyy-MM-dd}"
     const dateStr = parts.slice(-3).join("-"); // "yyyy-MM-dd"
     const targetDoctorId = parts.slice(1, -3).join("-");
 
-    const doctor: Doctor = activeData.doctor as Doctor;
+    if (activeData?.type === "shift") {
+      // Shift drag → copy to target cell
+      const src = activeData.shift as Shift;
+      if (src.doctorId === targetDoctorId && src.date === dateStr) return;
+      if (getShift(targetDoctorId, dateStr)) return; // don't overwrite
+      onShiftsChange([...shifts, { ...src, id: uuidv4(), doctorId: targetDoctorId, date: dateStr }]);
+      return;
+    }
 
-    // Don't overwrite an existing shift unless it's a same-doctor drop
-    const existing = getShift(targetDoctorId, dateStr);
-    if (existing) return; // already has a shift; user must edit via click
-
-    const holiday = isHoliday(dateStr);
-    const type: ShiftType = holiday ? "public_holiday" : "day";
-    const newShift = createShift(
-      targetDoctorId,
-      dateStr,
-      doctor.unit,
-      type,
-      type === "day" ? "08:00" : "00:00",
-      type === "day" ? "17:00" : "00:00"
-    );
-
-    onShiftsChange([...shifts, newShift]);
+    if (activeData?.type === "doctor") {
+      // Doctor drag → create new shift
+      const doctor: Doctor = activeData.doctor as Doctor;
+      if (getShift(targetDoctorId, dateStr)) return;
+      const holiday = isHoliday(dateStr);
+      const type: ShiftType = holiday ? "public_holiday" : "day";
+      const newShift = createShift(
+        targetDoctorId, dateStr, doctor.unit, type,
+        type === "day" ? "08:00" : "00:00",
+        type === "day" ? "17:00" : "00:00"
+      );
+      onShiftsChange([...shifts, newShift]);
+    }
   };
 
   const handleShiftSave = (updated: Shift) => {
@@ -344,6 +376,7 @@ export default function AdminCalendar({
                             date={dateStr}
                             isWeekend={isWeekend}
                             holiday={holiday}
+                            draggedShift={draggedShift}
                             onClick={() => shift && setEditingShift({ shift, doctor })}
                           />
                         </td>
@@ -399,7 +432,12 @@ export default function AdminCalendar({
 
         {/* Drag overlay */}
         <DragOverlay>
-          {draggedDoctor && (
+          {draggedShift && (
+            <div className="shadow-2xl rounded w-[90px] opacity-95 ring-2 ring-blue-400">
+              <ShiftCard shift={draggedShift} />
+            </div>
+          )}
+          {draggedDoctor && !draggedShift && (
             <div className="drag-overlay bg-white rounded-xl border-2 border-blue-500 px-3 py-2 shadow-2xl w-48">
               <div className="flex items-center gap-2">
                 <div
