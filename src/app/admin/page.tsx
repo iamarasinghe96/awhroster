@@ -4,24 +4,29 @@ import { useState, useEffect, useCallback } from "react";
 import { format, addMonths, subMonths } from "date-fns";
 import Link from "next/link";
 import { v4 as uuidv4 } from "uuid";
-import type { Doctor, Holiday, Shift, MonthlySchedule } from "@/lib/types";
+import type { Doctor, Holiday, Shift, MonthlySchedule, CalendarEvent } from "@/lib/types";
 import AdminCalendar from "@/components/admin/AdminCalendar";
 import DoctorPanel from "@/components/admin/DoctorPanel";
 import AddDoctorModal from "@/components/admin/AddDoctorModal";
 import GeminiImportModal from "@/components/admin/GeminiImportModal";
+import EventsModal from "@/components/admin/EventsModal";
 import {
   loadDoctors,
   loadSchedule,
   loadHolidays,
+  loadEvents,
   saveScheduleLocal,
   saveDoctorsLocal,
   exportScheduleJSON,
   exportDoctorsJSON,
   exportHolidaysJSON,
+  exportEventsJSON,
+  saveEventsLocal,
   clearScheduleLocal,
   downloadFile,
 } from "@/lib/clientStorage";
 import { updateHolidays, NSW_PUBLIC_HOLIDAYS } from "@/lib/holidays";
+import { updateEvents } from "@/lib/events";
 import { generateAdminCSV } from "@/lib/scheduleUtils";
 
 type SaveStatus = "idle" | "saving" | "saved";
@@ -38,7 +43,10 @@ export default function AdminPage() {
   const [showHolidayKey, setShowHolidayKey] = useState(false);
   const [showDeployHelp, setShowDeployHelp] = useState(false);
   const [showGeminiImport, setShowGeminiImport] = useState(false);
+  const [showEventsModal, setShowEventsModal] = useState(false);
   const [holidays, setHolidays] = useState<Holiday[]>(NSW_PUBLIC_HOLIDAYS);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [hasUnpublishedEvents, setHasUnpublishedEvents] = useState(false);
 
   const monthKey = format(currentMonth, "yyyy-MM");
 
@@ -48,6 +56,12 @@ export default function AdminPage() {
       if (h.length) {
         updateHolidays(h);
         setHolidays(h);
+      }
+    });
+    loadEvents().then((e) => {
+      if (e.length) {
+        updateEvents(e);
+        setEvents(e);
       }
     });
   }, []);
@@ -145,6 +159,20 @@ export default function AdminPage() {
     setTimeout(() => window.open(GITHUB_DATA_UPLOAD, "_blank"), 400);
   };
 
+  const handleSaveEvents = (updated: CalendarEvent[]) => {
+    saveEventsLocal(updated);
+    updateEvents(updated);
+    setEvents(updated);
+    setHasUnpublishedEvents(true);
+    setShowEventsModal(false);
+  };
+
+  const handlePublishEvents = () => {
+    exportEventsJSON(events);
+    setHasUnpublishedEvents(false);
+    setTimeout(() => window.open(GITHUB_DATA_UPLOAD, "_blank"), 400);
+  };
+
   const handleExportCSV = () => {
     const csv = generateAdminCSV(schedule?.shifts ?? [], doctors);
     downloadFile(csv, `roster_admin_${monthKey}.csv`, "text/csv; charset=utf-8");
@@ -179,13 +207,13 @@ export default function AdminPage() {
 
         <div className="flex items-center gap-2">
           <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition">&#8249;</button>
+            className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition">‹</button>
           <div className="text-center min-w-[140px]">
             <div className="font-bold text-sm">{format(currentMonth, "MMMM yyyy")}</div>
             {lastModified && <div className="text-[10px] text-slate-400">Saved {lastModified}</div>}
           </div>
           <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition">&#8250;</button>
+            className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition">›</button>
           <button onClick={() => setCurrentMonth(new Date())}
             className="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition ml-1">Today</button>
         </div>
@@ -203,6 +231,18 @@ export default function AdminPage() {
             className="text-xs px-2 py-1 rounded bg-violet-700 hover:bg-violet-600 text-violet-100 transition">
             Import PDF
           </button>
+
+          <div className="flex items-center gap-1">
+            <button onClick={() => setShowEventsModal(true)}
+              className="text-xs px-2 py-1 rounded bg-teal-700 hover:bg-teal-600 text-teal-100 transition">
+              Events
+            </button>
+            {hasUnpublishedEvents && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-600 text-white font-semibold animate-pulse">
+                ⚠ Not Published
+              </span>
+            )}
+          </div>
 
           <button onClick={() => setShowDeployHelp(!showDeployHelp)}
             className="text-xs px-2 py-1 rounded bg-blue-700 hover:bg-blue-600 text-blue-100 transition">Deploy</button>
@@ -238,6 +278,14 @@ export default function AdminPage() {
               <button onClick={handlePublishHolidays}
                 className="flex items-center gap-1.5 text-xs px-3 py-2 bg-green-700 hover:bg-green-600 rounded text-white whitespace-nowrap transition">
                 Publish Holidays
+              </button>
+              <button onClick={handlePublishEvents}
+                className={`flex items-center gap-1.5 text-xs px-3 py-2 rounded text-white whitespace-nowrap transition ${
+                  hasUnpublishedEvents
+                    ? "bg-red-600 hover:bg-red-500 font-semibold"
+                    : "bg-teal-700 hover:bg-teal-600"
+                }`}>
+                {hasUnpublishedEvents ? "⚠ Publish Events" : "Publish Events"}
               </button>
               <button onClick={handleResetFromPublished}
                 className="text-xs px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-400 hover:text-slate-200 whitespace-nowrap transition">
@@ -283,6 +331,7 @@ export default function AdminPage() {
               shifts={shifts}
               currentMonth={currentMonth}
               onShiftsChange={handleShiftsChange}
+              events={events}
             />
           )}
         </main>
@@ -315,6 +364,13 @@ export default function AdminPage() {
           existingShifts={shifts}
           onImport={handleGeminiImport}
           onClose={() => setShowGeminiImport(false)}
+        />
+      )}
+      {showEventsModal && (
+        <EventsModal
+          events={events}
+          onSave={handleSaveEvents}
+          onClose={() => setShowEventsModal(false)}
         />
       )}
     </div>

@@ -17,7 +17,8 @@ import type { Doctor, Shift, MonthlySchedule } from "@/lib/types";
 import { SHIFT_COLORS } from "@/lib/types";
 import { calculateHours, getDoctorTotalHours, getWeeklyAverageHours } from "@/lib/scheduleUtils";
 import { getHoliday, updateHolidays } from "@/lib/holidays";
-import { loadDoctors, loadSchedule, loadHolidays, downloadFile } from "@/lib/clientStorage";
+import { getEventsForDayAndRole, updateEvents } from "@/lib/events";
+import { loadDoctors, loadSchedule, loadHolidays, loadEvents, downloadFile } from "@/lib/clientStorage";
 import { generateICalContent, generateDoctorCSV } from "@/lib/scheduleUtils";
 import HolidayBadge from "@/components/common/HolidayBadge";
 
@@ -121,6 +122,7 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
   useEffect(() => {
     loadDoctors().then(setAllDoctors);
     loadHolidays().then((h) => { if (h.length) updateHolidays(h); });
+    loadEvents().then((e) => { if (e.length) updateEvents(e); });
   }, []);
 
   const getAllShifts = (): Shift[] => [
@@ -317,6 +319,17 @@ export default function DoctorCalendar({ doctor, onBack }: Props) {
                         {holiday.name}
                       </div>
                     )}
+
+                    {getEventsForDayAndRole(dateStr, doctor.role).map((evt) => (
+                      <div
+                        key={evt.id}
+                        className={`text-[9px] rounded px-1 py-0.5 mb-0.5 font-medium text-white truncate ${!inCurrentMonth ? "opacity-40" : ""}`}
+                        style={{ backgroundColor: evt.color }}
+                        title={evt.notes}
+                      >
+                        {evt.title} {evt.startTime}–{evt.endTime}
+                      </div>
+                    ))}
 
                     <ShiftCell
                       shift={myShift}

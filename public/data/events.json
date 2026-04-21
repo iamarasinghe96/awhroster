@@ -1,0 +1,26 @@
+{
+  "events": [
+    {
+      "id": "evt-001",
+      "title": "HMO Teaching",
+      "startTime": "14:00",
+      "endTime": "19:00",
+      "recurrence": "weekly",
+      "dayOfWeek": 1,
+      "recipients": "HMO",
+      "color": "#0d9488",
+      "notes": "Mandatory attendance"
+    },
+    {
+      "id": "evt-002",
+      "title": "Intern Teaching",
+      "startTime": "12:00",
+      "endTime": "13:00",
+      "recurrence": "weekly",
+      "dayOfWeek": 4,
+      "recipients": "Intern",
+      "color": "#0ea5e9",
+      "notes": "Mandatory attendance"
+    }
+  ]
+}

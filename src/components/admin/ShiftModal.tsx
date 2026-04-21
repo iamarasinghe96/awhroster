@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 import type { Shift, Doctor } from "@/lib/types";
 import { SHIFT_PRESETS, UNIT_OPTIONS } from "@/lib/types";
 import { calculateHours } from "@/lib/scheduleUtils";
@@ -11,11 +12,15 @@ interface Props {
   doctor: Doctor;
   onSave: (updated: Shift) => void;
   onDelete: (id: string) => void;
+  onDuplicate: (newShifts: Shift[]) => void;
   onClose: () => void;
 }
 
-export default function ShiftModal({ shift, doctor, onSave, onDelete, onClose }: Props) {
+export default function ShiftModal({ shift, doctor, onSave, onDelete, onDuplicate, onClose }: Props) {
   const [form, setForm] = useState({ ...shift });
+  const [showDuplicate, setShowDuplicate] = useState(false);
+  const [dupDates, setDupDates] = useState<string[]>([""]);
+
   const hours = calculateHours(form.startTime, form.endTime);
 
   const applyPreset = (key: string) => {
@@ -33,6 +38,27 @@ export default function ShiftModal({ shift, doctor, onSave, onDelete, onClose }:
       onDelete(shift.id);
       onClose();
     }
+  };
+
+  const setDupDate = (i: number, val: string) => {
+    const next = [...dupDates];
+    next[i] = val;
+    setDupDates(next);
+  };
+  const addDupDate = () => setDupDates([...dupDates, ""]);
+  const removeDupDate = (i: number) => setDupDates(dupDates.filter((_, idx) => idx !== i));
+
+  const validDupDates = dupDates.filter(Boolean);
+
+  const handleDuplicate = () => {
+    if (!validDupDates.length) return;
+    const newShifts: Shift[] = validDupDates.map((date) => ({
+      ...form,
+      id: uuidv4(),
+      date,
+    }));
+    onDuplicate(newShifts);
+    onClose();
   };
 
   const dateLabel = format(parseISO(shift.date), "EEEE, d MMMM yyyy");
@@ -140,7 +166,62 @@ export default function ShiftModal({ shift, doctor, onSave, onDelete, onClose }:
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          {/* Duplicate panel */}
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setShowDuplicate(!showDuplicate)}
+              className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+            >
+              <span>📋 Duplicate to other dates</span>
+              <span className="text-slate-400 text-xs">{showDuplicate ? "▲" : "▼"}</span>
+            </button>
+
+            {showDuplicate && (
+              <div className="px-4 pb-4 pt-1 bg-slate-50 space-y-2 border-t border-slate-200">
+                <p className="text-xs text-slate-500">
+                  Copies this shift (with any changes above) to each selected date.
+                  Existing shifts on those dates are skipped.
+                </p>
+                {dupDates.map((d, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={d}
+                      onChange={(e) => setDupDate(i, e.target.value)}
+                      className="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {dupDates.length > 1 && (
+                      <button
+                        onClick={() => removeDupDate(i)}
+                        className="text-red-400 hover:text-red-600 text-lg leading-none px-1"
+                        title="Remove"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={addDupDate}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    + Add another date
+                  </button>
+                  <div className="flex-1" />
+                  <button
+                    onClick={handleDuplicate}
+                    disabled={!validDupDates.length}
+                    className="px-4 py-1.5 bg-blue-600 disabled:opacity-40 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition"
+                  >
+                    Copy to {validDupDates.length} date{validDupDates.length !== 1 ? "s" : ""}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-1">
             <button
               onClick={handleDelete}
               className="px-3 py-2 text-red-600 border border-red-200 rounded-lg text-sm hover:bg-red-50 transition"

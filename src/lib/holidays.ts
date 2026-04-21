@@ -32,7 +32,6 @@ const HARDCODED: Holiday[] = [
   { date: "2027-12-28", name: "Boxing Day (Additional Day)" },
 ];
 
-// Module-level mutable list — updated at runtime from public/data/holidays.json
 export let NSW_PUBLIC_HOLIDAYS: Holiday[] = [...HARDCODED];
 
 export function updateHolidays(list: Holiday[]): void {
