@@ -1,19 +1,109 @@
 {
   "doctors": [
-    { "id": "1", "name": "Faith O'Connor", "role": "Intern", "unit": "Unit 1", "color": "#3B82F6" },
-    { "id": "2", "name": "Guvani Amarsinghe", "role": "Intern", "unit": "Unit 1", "color": "#8B5CF6" },
-    { "id": "3", "name": "Joel Mckenzie", "role": "Intern", "unit": "Unit 2", "color": "#10B981" },
-    { "id": "4", "name": "Jan Morgiewicz", "role": "Intern", "unit": "Unit 2", "color": "#F59E0B" },
-    { "id": "5", "name": "Emily Phillips", "role": "Intern", "unit": "Unit 3", "color": "#14B8A6" },
-    { "id": "6", "name": "Olivia Bradley", "role": "Intern", "unit": "Unit 3", "color": "#EC4899" },
-    { "id": "7", "name": "James Croke", "role": "Intern", "unit": "Unit 4", "color": "#EF4444" },
-    { "id": "8", "name": "Prince Nwachukwu", "role": "HMO", "unit": "Unit 4", "color": "#6366F1" },
-    { "id": "9", "name": "Raveesha Adhikari Mudiyanselage", "role": "Intern", "unit": "Evening", "color": "#F97316" },
-    { "id": "10", "name": "Sashi Samarakoon", "role": "HMO", "unit": "Unit 5", "color": "#06B6D4" },
-    { "id": "11", "name": "Yasitha Weerasinghe", "role": "HMO", "unit": "Unit 5", "color": "#65A30D" },
-    { "id": "12", "name": "Warren Davis", "role": "HMO", "unit": "Unit 6", "color": "#D97706" },
-    { "id": "13", "name": "Veronica Chu", "role": "HMO", "unit": "Unit 6", "color": "#F43F5E" },
-    { "id": "14", "name": "Mitch Millett", "role": "HMO", "unit": "Oncology/HAEM", "color": "#059669" },
-    { "id": "15", "name": "Katherine Wong", "role": "HMO", "unit": "Unit 5", "color": "#7C3AED" }
+    {
+      "name": "Faith",
+      "role": "Intern",
+      "unit": "Unit 1",
+      "color": "#3B82F6",
+      "id": "1"
+    },
+    {
+      "name": "Guvani",
+      "role": "Intern",
+      "unit": "Unit 1",
+      "color": "#8B5CF6",
+      "id": "2"
+    },
+    {
+      "name": "Joel",
+      "role": "Intern",
+      "unit": "Unit 2",
+      "color": "#10B981",
+      "id": "3"
+    },
+    {
+      "name": "Jan",
+      "role": "Intern",
+      "unit": "Unit 2",
+      "color": "#F59E0B",
+      "id": "4"
+    },
+    {
+      "name": "Emily",
+      "role": "Intern",
+      "unit": "Unit 3",
+      "color": "#14B8A6",
+      "id": "5"
+    },
+    {
+      "name": "Olivia",
+      "role": "Intern",
+      "unit": "Unit 3",
+      "color": "#EC4899",
+      "id": "6"
+    },
+    {
+      "name": "James",
+      "role": "Intern",
+      "unit": "Unit 4",
+      "color": "#EF4444",
+      "id": "7"
+    },
+    {
+      "name": "Prince",
+      "role": "HMO",
+      "unit": "Unit 4",
+      "color": "#6366F1",
+      "id": "8"
+    },
+    {
+      "name": "Raveesha",
+      "role": "Intern",
+      "unit": "Evening",
+      "color": "#F97316",
+      "id": "9"
+    },
+    {
+      "name": "Sashi",
+      "role": "HMO",
+      "unit": "Unit 5",
+      "color": "#06B6D4",
+      "id": "10"
+    },
+    {
+      "name": "Yasitha",
+      "role": "HMO",
+      "unit": "Unit 5",
+      "color": "#65A30D",
+      "id": "11"
+    },
+    {
+      "name": "Warren",
+      "role": "HMO",
+      "unit": "Unit 6",
+      "color": "#D97706",
+      "id": "12"
+    },
+    {
+      "name": "Veronica",
+      "role": "HMO",
+      "unit": "Unit 6",
+      "color": "#F43F5E",
+      "id": "13"
+    },
+    {
+      "name": "Mitch",
+      "role": "HMO",
+      "unit": "Oncology/HAEM",
+      "color": "#059669",
+      "id": "14"
+    },
+    {
+      "name": "Katherine",
+      "role": "HMO",
+      "unit": "Unit 5",
+      "color": "#7C3AED",
+      "id": "15"
+    }
   ]
 }
