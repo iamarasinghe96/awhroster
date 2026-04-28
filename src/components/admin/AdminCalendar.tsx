@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   format,
   eachDayOfInterval,
@@ -209,6 +209,33 @@ export default function AdminCalendar({
   const [draggedDoctor, setDraggedDoctor] = useState<Doctor | null>(null);
   const [draggedShift, setDraggedShift] = useState<Shift | null>(null);
 
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const topBarRef = useRef<HTMLDivElement>(null);
+  const [tableScrollWidth, setTableScrollWidth] = useState(0);
+
+  useEffect(() => {
+    const el = tableScrollRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setTableScrollWidth(el.scrollWidth));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const syncFromTable = () => {
+    if (topBarRef.current && tableScrollRef.current)
+      topBarRef.current.scrollLeft = tableScrollRef.current.scrollLeft;
+  };
+  const syncFromTopBar = () => {
+    if (topBarRef.current && tableScrollRef.current)
+      tableScrollRef.current.scrollLeft = topBarRef.current.scrollLeft;
+  };
+  const scrollByWeek = (dir: 1 | -1) => {
+    if (tableScrollRef.current) {
+      tableScrollRef.current.scrollLeft += dir * 7 * 90;
+      syncFromTable();
+    }
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
@@ -299,7 +326,38 @@ export default function AdminCalendar({
   return (
     <>
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex-1 overflow-auto roster-scroll">
+
+        {/* ── Top scroll bar + week-scroll buttons ── */}
+        <div className="flex items-center bg-slate-900 border-b border-slate-700 px-1 gap-1 sticky top-0 z-30">
+          <button
+            onClick={() => scrollByWeek(-1)}
+            title="Scroll back one week"
+            className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded text-slate-300 hover:text-white hover:bg-slate-700 transition text-sm"
+          >
+            ◀
+          </button>
+          <div
+            ref={topBarRef}
+            onScroll={syncFromTopBar}
+            className="flex-1 overflow-x-scroll overflow-y-hidden roster-scroll"
+            style={{ height: 12 }}
+          >
+            <div style={{ width: tableScrollWidth, height: 1 }} />
+          </div>
+          <button
+            onClick={() => scrollByWeek(1)}
+            title="Scroll forward one week"
+            className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded text-slate-300 hover:text-white hover:bg-slate-700 transition text-sm"
+          >
+            ▶
+          </button>
+        </div>
+
+        <div
+          ref={tableScrollRef}
+          onScroll={syncFromTable}
+          className="flex-1 overflow-auto roster-scroll-main"
+        >
           <table className="border-collapse min-w-max w-full">
             <thead className="sticky top-0 z-20">
               {/* Month/week header row */}

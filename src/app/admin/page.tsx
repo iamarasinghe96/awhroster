@@ -205,15 +205,21 @@ export default function AdminPage() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition">‹</button>
+            title="Previous month"
+            className="w-9 h-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 transition text-base leading-none">
+            ⏪
+          </button>
           <div className="text-center min-w-[140px]">
             <div className="font-bold text-sm">{format(currentMonth, "MMMM yyyy")}</div>
             {lastModified && <div className="text-[10px] text-slate-400">Saved {lastModified}</div>}
           </div>
           <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition">›</button>
+            title="Next month"
+            className="w-9 h-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 transition text-base leading-none">
+            ⏩
+          </button>
           <button onClick={() => setCurrentMonth(new Date())}
             className="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition ml-1">Today</button>
         </div>
